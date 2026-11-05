@@ -1,0 +1,19 @@
+
+# Dépendances
+node_modules/
+
+# Fichiers générés
+dist/
+out/
+
+# Données personnelles
+servers.json
+config.json
+
+# Configuration sensible
+.env
+.env.*
+
+# Fichiers temporaires
+*.log
+*.tmp

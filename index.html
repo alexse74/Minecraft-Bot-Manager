@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Minecraft Bot Manager</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="renderer.js" defer></script>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- ========================================
+         EN-TÊTE
+    ======================================== -->
+
+    <header class="app-header">
+      <div>
+        <h1>Minecraft Bot Manager</h1>
+        <p>Gestion de ton bot Minecraft</p>
+      </div>
+
+      <div class="theme-control">
+        <label for="theme-select">Thème :</label>
+
+        <select id="theme-select">
+          <option value="minecraft">Défaut</option>
+          <option value="normal">Classique</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- ========================================
+         ÉCRAN 1 : MES SERVEURS
+    ======================================== -->
+
+    <section id="server-screen" class="screen">
+
+      <div class="servers-header">
+        <div>
+          <h2>Mes serveurs</h2>
+
+          <p class="description">
+            Sélectionne un serveur pour connecter ton bot.
+          </p>
+        </div>
+
+        <button
+          id="add-server-button"
+          type="button"
+          class="primary-button"
+        >
+          + Ajouter un serveur
+        </button>
+      </div>
+
+      <!-- Liste des serveurs enregistrés -->
+      <div
+        id="saved-server-list"
+        class="saved-server-list"
+      ></div>
+
+      <!-- Aucun serveur enregistré -->
+      <div
+        id="empty-server-list"
+        class="empty-server-list hidden"
+      >
+        <div class="empty-server-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect
+              x="4" y="4"
+              width="16" height="7"
+              rx="1"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <rect
+              x="4" y="13"
+              width="16" height="7"
+              rx="1"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M7 7.5h.01M7 16.5h.01"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+
+        <strong>Aucun serveur enregistré</strong>
+        <p>Ajoute ton premier serveur pour commencer.</p>
+      </div>
+
+      <p id="server-error" class="error-message"></p>
+
+    </section>
+
+    <!-- ========================================
+         ÉCRAN 2 : AJOUTER / MODIFIER UN SERVEUR
+    ======================================== -->
+
+    <section
+      id="server-editor-screen"
+      class="screen hidden"
+    >
+      <h2 id="server-editor-title">Ajouter un serveur</h2>
+
+      <form
+        id="server-editor-form"
+        class="server-editor-form"
+      >
+
+        <label for="server-name">Nom du serveur</label>
+        <input
+          id="server-name"
+          type="text"
+          maxlength="50"
+          placeholder="Ex : Mon serveur survie"
+          autocomplete="off"
+          required
+        >
+
+        <label for="server-host">
+          Adresse IP ou nom de domaine
+        </label>
+        <input
+          id="server-host"
+          type="text"
+          maxlength="255"
+          placeholder="Ex : play.exemple.fr"
+          autocomplete="off"
+          required
+        >
+
+        <label for="server-port">Port</label>
+        <input
+          id="server-port"
+          type="number"
+          min="1"
+          max="65535"
+          value="25565"
+          required
+        >
+
+        <label>Logo du serveur</label>
+
+        <div
+          id="server-icon-picker"
+          class="server-icon-picker"
+        >
+
+          <!-- ERLENMEYER -->
+          <button
+            type="button"
+            class="server-icon-option selected"
+            data-icon="flask"
+            title="Laboratoire"
+            aria-label="Laboratoire"
+            aria-pressed="true"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 3h6M10 3v6l-5.1 8.1A2 2 0 0 0 6.6 20h10.8a2 2 0 0 0 1.7-2.9L14 9V3M7.5 15h9"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          <!-- MANETTE -->
+          <button
+            type="button"
+            class="server-icon-option"
+            data-icon="gamepad"
+            title="Manette"
+            aria-label="Manette"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M7.5 9h9a4 4 0 0 1 3.6 2.2l.9 1.8a3.5 3.5 0 0 1-3.1 5H17a2 2 0 0 1-1.7-.9l-1.2-1.6h-4.2l-1.2 1.6A2 2 0 0 1 7 18h-.9A3.5 3.5 0 0 1 3 13l.9-1.8A4 4 0 0 1 7.5 9Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M8 11.8v3.4M6.3 13.5h3.4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+              <circle
+                cx="15.7" cy="12.4" r=".9"
+                fill="currentColor"
+              />
+              <circle
+                cx="17.8" cy="14.5" r=".9"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+
+          <!-- SERVEUR -->
+          <button
+            type="button"
+            class="server-icon-option"
+            data-icon="server"
+            title="Serveur"
+            aria-label="Serveur"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect
+                x="4" y="4"
+                width="16" height="7"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <rect
+                x="4" y="13"
+                width="16" height="7"
+                rx="1"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M7 7.5h.01M7 16.5h.01"
+                stroke="currentColor"
+                stroke-width="2.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+
+          <!-- GLOBE -->
+          <button
+            type="button"
+            class="server-icon-option"
+            data-icon="globe"
+            title="Globe"
+            aria-label="Globe"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle
+                cx="12" cy="12" r="9"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9M12 3c-3 3-4 6-4 9s1 6 4 9"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+          </button>
+
+          <!-- BOUCLIER -->
+          <button
+            type="button"
+            class="server-icon-option"
+            data-icon="shield"
+            title="Bouclier"
+            aria-label="Bouclier"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 3 20 6v5c0 5-3.3 8-8 10-4.7-2-8-5-8-10V6l8-3Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          
+
+        </div>
+
+        <p
+          id="server-editor-error"
+          class="error-message"
+        ></p>
+
+        <div class="button-row">
+          <button
+            id="cancel-server-button"
+            type="button"
+            class="secondary-button"
+          >
+            Annuler
+          </button>
+
+          <button
+            id="save-server-button"
+            type="submit"
+            class="primary-button"
+          >
+            Enregistrer
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ========================================
+         ÉCRAN 3 : PSEUDO DU BOT
+    ======================================== -->
+
+    <section
+      id="username-screen"
+      class="screen hidden"
+    >
+      <h2>Pseudo du bot</h2>
+
+      <p class="description">
+        Serveur sélectionné :
+        <strong id="selected-server"></strong>
+      </p>
+
+      <label for="bot-username">Pseudo Minecraft</label>
+
+      <input
+        id="bot-username"
+        type="text"
+        placeholder="Bot"
+        maxlength="16"
+        autocomplete="off"
+      >
+
+      <p
+        id="username-error"
+        class="error-message"
+      ></p>
+
+      <div class="button-row">
+        <button
+          id="back-to-servers"
+          type="button"
+          class="secondary-button"
+        >
+          Retour
+        </button>
+
+        <button
+          id="connect-button"
+          type="button"
+          class="primary-button"
+        >
+          Se connecter
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================
+         ÉCRAN 4 : CONTRÔLE DU BOT
+    ======================================== -->
+
+    <section
+      id="control-screen"
+      class="screen hidden"
+    >
+
+      <!-- État de connexion -->
+      <div class="status-bar">
+        <div>
+          <span class="info-label">État :</span>
+          <strong id="connection-status">Déconnecté</strong>
+        </div>
+
+        <div>
+          <span class="info-label">Pseudo :</span>
+          <strong id="current-username">-</strong>
+        </div>
+
+        <div>
+          <span class="info-label">Serveur :</span>
+          <strong id="current-server">-</strong>
+        </div>
+      </div>
+
+      <!-- Coordonnées -->
+      <div class="position-bar">
+        <strong>Position du bot</strong>
+
+        <div class="coordinates">
+          <span>X : <strong id="pos-x">-</strong></span>
+          <span>Y : <strong id="pos-y">-</strong></span>
+          <span>Z : <strong id="pos-z">-</strong></span>
+        </div>
+      </div>
+
+      <!-- Suivi du joueur -->
+      <div class="follow-panel">
+        <div class="follow-selection">
+          <label for="player-select">
+            Joueur à suivre
+          </label>
+
+          <select id="player-select">
+            <option value="">
+              Aucun joueur visible
+            </option>
+          </select>
+        </div>
+
+        <button
+          id="follow-button"
+          type="button"
+          class="primary-button"
+          disabled
+        >
+          Suivre
+        </button>
+      </div>
+
+      <!-- Console -->
+      <div class="console-panel">
+        <h2>Console</h2>
+
+        <div
+          id="console-output"
+          class="console-output"
+          role="log"
+          aria-live="off"
+        ></div>
+
+        <form
+          id="command-form"
+          class="console-form"
+        >
+          <span class="console-prompt">&gt;</span>
+
+          <input
+            id="command-input"
+            type="text"
+            placeholder="Tape une commande (ex : aide)"
+            autocomplete="off"
+          >
+
+          <button
+            type="submit"
+            class="secondary-button"
+          >
+            Exécuter
+          </button>
+        </form>
+      </div>
+
+      <!-- Chat public -->
+      <div class="chat-panel">
+        <label for="chat-input">
+          Message dans le chat public
+        </label>
+
+        <form
+          id="chat-form"
+          class="chat-form"
+        >
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="Écrire un message..."
+            autocomplete="off"
+          >
+
+          <button
+            type="submit"
+            class="primary-button"
+          >
+            Envoyer
+          </button>
+        </form>
+      </div>
+
+      <!-- Déconnexion -->
+      <div class="bottom-actions">
+        <button
+          id="disconnect-button"
+          type="button"
+          class="danger-button"
+        >
+          Déconnecter le bot
+        </button>
+      </div>
+
+    </section>
+
+  </div>
+</body>
+</html>
