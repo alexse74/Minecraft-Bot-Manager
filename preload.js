@@ -60,6 +60,7 @@ setAuthorizedPlayer: username =>
   // ========================================
 
   getServers: () => ipcRenderer.invoke('servers:list'),
+  getServerStatus: id => ipcRenderer.invoke('servers:status', id),
 
   saveServer: server => ipcRenderer.invoke('servers:save', server),
 

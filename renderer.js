@@ -11,6 +11,7 @@ const controlScreen = document.getElementById('control-screen')
 const savedServerList = document.getElementById('saved-server-list')
 const emptyServerList = document.getElementById('empty-server-list')
 const addServerButton = document.getElementById('add-server-button')
+const refreshServerStatusButton = document.getElementById('refresh-server-status')
 const serverError = document.getElementById('server-error')
 
 // Formulaire d'ajout / modification
@@ -205,7 +206,11 @@ async function loadServers() {
 // AFFICHAGE DES SERVEURS
 // ========================================
 
+let serverStatusGeneration = 0
+
 function renderServers() {
+  const generation = ++serverStatusGeneration
+  const checks = []
   savedServerList.replaceChildren()
 
   emptyServerList.classList.toggle(
@@ -230,7 +235,13 @@ function renderServers() {
     const address = document.createElement('span')
     address.textContent = `${server.host}:${server.port}`
 
-    details.append(name, address)
+    const status = document.createElement('span')
+    status.className = 'server-status'
+    status.dataset.status = 'checking'
+    status.textContent = 'Vérification…'
+    status.title = 'Vérification sans connecter le bot.'
+    details.append(name, address, status)
+    checks.push({ id: server.id, element: status })
 
     // Boutons
     const actions = document.createElement('div')
@@ -265,7 +276,46 @@ function renderServers() {
     card.append(icon, details, actions)
     savedServerList.appendChild(card)
   }
+  refreshServerStatusButton.disabled = checks.length === 0
+  refreshServerStatuses(checks, generation)
 }
+
+async function refreshServerStatuses(checks, generation) {
+  refreshServerStatusButton.disabled = true
+  let next = 0
+  async function worker() {
+    while (next < checks.length && generation === serverStatusGeneration) {
+      const { id, element } = checks[next++]
+      let state = 'unknown'
+      let onlinePlayers = null
+      try {
+        const result = await window.minecraftBot.getServerStatus(id)
+        if (result.success) {
+          state = result.status === 'online' ? 'online' : 'offline'
+          if (Number.isSafeInteger(result.onlinePlayers) && result.onlinePlayers >= 0) {
+            onlinePlayers = result.onlinePlayers
+          }
+        }
+      } catch { /* Une erreur IPC n'est pas une preuve que le serveur est hors ligne. */ }
+      if (generation !== serverStatusGeneration) return
+      element.dataset.status = state
+      const onlineText = onlinePlayers === null ? 'En ligne'
+        : `En ligne — ${onlinePlayers} joueur${onlinePlayers > 1 ? 's' : ''} connecté${onlinePlayers > 1 ? 's' : ''}`
+      element.textContent = state === 'online' ? onlineText
+        : state === 'offline' ? 'Hors ligne ou inaccessible' : 'Statut indisponible'
+      element.title = state === 'offline'
+        ? 'Aucune réponse Minecraft : serveur arrêté, réseau indisponible ou vérifications bloquées.'
+        : 'Dernière vérification : ' + new Date().toLocaleTimeString()
+    }
+  }
+  // Limiter les connexions simultanées, même avec une longue liste.
+  await Promise.all(Array.from({ length: Math.min(4, checks.length) }, worker))
+  if (generation === serverStatusGeneration) {
+    refreshServerStatusButton.disabled = checks.length === 0
+  }
+}
+
+refreshServerStatusButton.addEventListener('click', () => renderServers())
 
 // ========================================
 // AJOUT / MODIFICATION D'UN SERVEUR
@@ -304,6 +354,7 @@ addServerButton.addEventListener('click', () => {
 })
 
 cancelServerButton.addEventListener('click', () => {
+  renderServers()
   showScreen(serverScreen)
 })
 
@@ -425,6 +476,7 @@ function chooseServer(server) {
 }
 
 backButton.addEventListener('click', () => {
+  renderServers()
   showScreen(serverScreen)
 })
 

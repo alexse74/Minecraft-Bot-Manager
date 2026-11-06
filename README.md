@@ -3,7 +3,17 @@
 
 Application Windows développée avec **Electron**, **Node.js** et **Mineflayer**, permettant de contrôler un bot Minecraft depuis une interface graphique.
 
-**Version actuelle : 1.1.0**
+**Version actuelle : 1.2.0**
+
+## Nouveautés de la version 1.2.0
+
+- Affichage du statut de chaque serveur enregistré : **Vérification…**, **En ligne** ou **Hors ligne ou inaccessible**.
+- Nombre de joueurs connectés à côté du statut en ligne, lorsque le serveur fournit cette information.
+- Vérification à l'affichage de la liste et bouton **Actualiser les statuts**, sans connecter le bot.
+- Délai maximal de 5 secondes par vérification, jusqu'à quatre requêtes en parallèle par lot et prise en charge des enregistrements DNS SRV sur le port par défaut.
+- Ajout du fichier `AGENTS.md` pour documenter les consignes de développement et les protections contre les régressions.
+
+Une absence de réponse peut provenir du réseau ou d'un serveur qui bloque les requêtes de statut : elle ne prouve pas toujours que le serveur est arrêté. Le statut et le compteur ont été testés et validés par l'auteur sur son serveur.
 
 ## Nouveautés de la version 1.1.0
 
@@ -39,6 +49,7 @@ Cette version rassemble les ajouts et corrections depuis la version 1.0.0.
 ## Fonctionnalités
 
 - **Gestion des serveurs** : ajouter, modifier et supprimer des serveurs Minecraft.
+- **Statut des serveurs** : disponibilité et nombre de joueurs connectés, avec actualisation manuelle.
 - **Sauvegarde locale** : les serveurs enregistrés sont conservés entre les lancements.
 - **Personnalisation** : choix du nom, de l'adresse, du port et du logo de chaque serveur.
 - **Deux thèmes** : Défaut (inspiré de Minecraft) et Classique.
@@ -114,7 +125,7 @@ L'installateur sera généré dans le dossier `dist/`.
 
 Les serveurs ajoutés dans l'application sont enregistrés localement dans les données utilisateur de Windows.
 
-Le fichier `servers.json` conserve les serveurs et `config.json` le dernier pseudo utilisé. Le thème est conservé dans le stockage local de l'interface. Ces données sont conservées au passage à la version 1.1.0, sans changement de format.
+Le fichier `servers.json` conserve les serveurs et `config.json` le dernier pseudo utilisé. Le thème est conservé dans le stockage local de l'interface. Ces données sont conservées au passage à la version 1.2.0, sans changement de format.
 
 Aucune adresse IP de serveur personnel n'est incluse dans le code source.
 
@@ -124,4 +135,4 @@ Les données locales ne sont pas nécessaires pour installer ou lancer le projet
 
 Projet personnel développé par [alexse74](https://github.com/alexse74).
 
-**Version : 1.1.0**
+**Version : 1.2.0**

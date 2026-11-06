@@ -546,6 +546,32 @@ body[data-theme="minecraft"] .server-card-icon {
 
 /* Liste des serveurs */
 
+.server-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.saved-server-details .server-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.server-status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.saved-server-details .server-status[data-status="online"] { color: #68d391; }
+.saved-server-details .server-status[data-status="offline"] { color: #ff8181; }
+
 .saved-server-list {
   display: flex;
   flex-direction: column;

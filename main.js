@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const { randomUUID } = require('crypto')
 const BotManager = require('./bot')
+const checkServerStatus = require('./server-status')
 
 let mainWindow = null
 let isQuitting = false
@@ -242,6 +243,28 @@ ipcMain.handle('servers:list', () => {
       success: false,
       error: error.message
     }
+  }
+})
+
+// Le renderer transmet un identifiant ; seules les adresses sauvegardées sont sondées.
+const pendingServerChecks = new Map()
+ipcMain.handle('servers:status', async (event, id) => {
+  if (event.sender !== mainWindow?.webContents) {
+    return { success: false, error: 'Fenêtre non autorisée.' }
+  }
+  try {
+    const server = loadServers().find(item => item.id === id)
+    if (!server) throw new Error('Serveur introuvable.')
+    const { host, port } = validateServer(server)
+    const key = JSON.stringify([host, port])
+    if (!pendingServerChecks.has(key)) {
+      const request = checkServerStatus({ host, port })
+        .finally(() => pendingServerChecks.delete(key))
+      pendingServerChecks.set(key, request)
+    }
+    return { success: true, ...await pendingServerChecks.get(key) }
+  } catch (error) {
+    return { success: false, error: error.message }
   }
 })
 
