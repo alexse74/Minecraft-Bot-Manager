@@ -12,8 +12,48 @@ contextBridge.exposeInMainWorld('minecraftBot', {
   command: input => ipcRenderer.invoke('bot:command', input),
 
   disconnect: () => ipcRenderer.invoke('bot:disconnect'),
+  
+  
+  // Monter dans le véhicule le plus proche ou en descendre
+  toggleVehicle: () => ipcRenderer.invoke('bot:toggle-vehicle'),
+
+  // Recevoir les changements d'état du véhicule
+  onVehicle: callback => {
+    const listener = (_event, mounted) => callback(mounted)
+
+    ipcRenderer.on('bot:vehicle', listener)
+
+    return () => {
+      ipcRenderer.removeListener('bot:vehicle', listener)
+    }
+  },
+
+  
+setAuthorizedPlayer: username =>
+  ipcRenderer.invoke('bot:set-authorized-player', username),
+
 
   getLastUsername: () => ipcRenderer.invoke('config:get-username'),
+  
+  
+  // ========================================
+  // GESTION DU THÈME
+  // ========================================
+
+  syncTheme: theme => {
+    ipcRenderer.send('app:theme-sync', theme)
+  },
+
+  onThemeChanged: callback => {
+    const listener = (_event, theme) => callback(theme)
+
+    ipcRenderer.on('app:theme-changed', listener)
+
+    return () => {
+      ipcRenderer.removeListener('app:theme-changed', listener)
+    }
+  },
+
 
   // ========================================
   // GESTION DES SERVEURS
@@ -50,11 +90,27 @@ contextBridge.exposeInMainWorld('minecraftBot', {
     return () => ipcRenderer.removeListener('bot:position', listener)
   },
 
-  onPlayers: callback => {
-    const listener = (_event, players) => callback(players)
-    ipcRenderer.on('bot:players', listener)
+  
+onPlayers: callback => {
+  const listener = (_event, players) => callback(players)
+  ipcRenderer.on('bot:players', listener)
 
-    return () => ipcRenderer.removeListener('bot:players', listener)
-  }
+  return () => ipcRenderer.removeListener('bot:players', listener)
+},
+
+onConnectedPlayers: callback => {
+  const listener = (_event, players) => callback(players)
+  ipcRenderer.on('bot:connected-players', listener)
+
+  return () => ipcRenderer.removeListener('bot:connected-players', listener)
+},
+
+onAuthorizedPlayer: callback => {
+  const listener = (_event, username) => callback(username)
+  ipcRenderer.on('bot:authorized-player', listener)
+
+  return () => ipcRenderer.removeListener('bot:authorized-player', listener)
+}
+
 
 })

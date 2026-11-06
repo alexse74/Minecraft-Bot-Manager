@@ -1,7 +1,7 @@
 
 {
   "name": "minecraft-bot-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Interface de gestion d'un bot Minecraft",
   "main": "main.js",
   "scripts": {
@@ -26,19 +26,23 @@
     "directories": {
       "output": "dist"
     },
-    "files": [
-      "main.js",
-      "preload.js",
-      "renderer.js",
-      "index.html",
-      "style.css",
-      "bot.js",
-      "node_modules/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis"
-    },
+	"files": [
+	  "main.js",
+	  "preload.js",
+	  "renderer.js",
+	  "index.html",
+	  "style.css",
+	  "bot.js",
+	  "assets/**/*",
+	  "node_modules/**/*",
+	  "package.json"
+	],
+
+	"win": {
+	  "target": "nsis",
+	  "icon": "assets/icon.ico"
+	},
+
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true

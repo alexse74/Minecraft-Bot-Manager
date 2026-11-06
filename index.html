@@ -24,14 +24,7 @@
         <p>Gestion de ton bot Minecraft</p>
       </div>
 
-      <div class="theme-control">
-        <label for="theme-select">Thème :</label>
-
-        <select id="theme-select">
-          <option value="minecraft">Défaut</option>
-          <option value="normal">Classique</option>
-        </select>
-      </div>
+      
     </header>
 
     <!-- ========================================
@@ -426,6 +419,43 @@
           Suivre
         </button>
       </div>
+
+	
+	<!-- GESTION DU VÉHICULE -->
+	<div class="vehicle-panel">
+	  <h3>Véhicule</h3>
+
+	  <button id="vehicle-btn" type="button" disabled>
+		Monter dans le véhicule
+	  </button>
+
+	  
+	</div>
+
+
+
+<!-- ========================================
+     JOUEUR AUTORISÉ POUR LES /MSG
+======================================== -->
+
+<div class="authorized-panel">
+  <div class="authorized-selection">
+    <label for="authorized-player-select">
+      Joueur autorisé pour les /msg
+    </label>
+
+    <select id="authorized-player-select">
+      <option value="">Aucun joueur autorisé</option>
+    </select>
+  </div>
+
+  <div class="authorized-indicator">
+    <span class="info-label">Autorisation :</span>
+    <strong id="authorized-player-status">Aucune</strong>
+  </div>
+</div>
+
+
 
       <!-- Console -->
       <div class="console-panel">

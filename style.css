@@ -114,20 +114,7 @@ button:disabled {
   font-size: 12px;
 }
 
-.theme-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
-.theme-control label {
-  color: var(--muted);
-}
-
-.theme-control select {
-  width: 135px;
-  padding: 7px 9px;
-}
 
 /* ========================================
    ÉCRANS
@@ -395,7 +382,7 @@ select:focus {
   display: flex;
   flex: 1;
   flex-direction: column;
-  min-height: 100px;
+  min-height: 70px;
   overflow: hidden;
 }
 
@@ -743,4 +730,91 @@ body[data-theme="minecraft"] .saved-server-card:hover {
 body[data-theme="minecraft"] .server-icon-option.selected {
   border-color: #66ab4d;
   color: #66ab4d;
+}
+
+
+/* ========================================
+   JOUEUR AUTORISÉ POUR LES /MSG
+======================================== */
+
+.authorized-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  flex-shrink: 0;
+  padding: 10px 13px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.authorized-selection {
+  flex: 1;
+  min-width: 0;
+}
+
+.authorized-selection label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 500;
+}
+
+.authorized-selection select {
+  width: 100%;
+  padding: 8px;
+}
+
+.authorized-indicator {
+  min-width: 170px;
+  text-align: right;
+}
+
+#authorized-player-status {
+  color: var(--muted);
+}
+
+body[data-theme="minecraft"] .authorized-panel {
+  border-width: 2px;
+}
+
+
+/* ===============================
+   GESTION DU VÉHICULE
+================================ */
+
+.vehicle-panel {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.vehicle-panel h3 {
+  margin: 0 0 12px;
+}
+
+#vehicle-btn {
+  width: 100%;
+  padding: 11px;
+  cursor: pointer;
+}
+
+#vehicle-btn.vehicle-active {
+  background-color: #c62828;
+  color: white;
+  border-color: #c62828;
+}
+
+#vehicle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#vehicle-status {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
 }

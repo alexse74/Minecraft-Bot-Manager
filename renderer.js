@@ -44,6 +44,18 @@ const posZ = document.getElementById('pos-z')
 const playerSelect = document.getElementById('player-select')
 const followButton = document.getElementById('follow-button')
 
+// Véhicule
+const vehicleButton = document.getElementById('vehicle-btn')
+
+
+// Joueur autorisé pour les commandes privées
+const authorizedPlayerSelect = document.getElementById('authorized-player-select')
+const authorizedPlayerStatus = document.getElementById('authorized-player-status')
+
+let authorizedPlayer = null
+let updatingAuthorization = false
+
+
 // Console
 const consoleOutput = document.getElementById('console-output')
 const commandForm = document.getElementById('command-form')
@@ -56,8 +68,7 @@ const chatInput = document.getElementById('chat-input')
 // Déconnexion
 const disconnectButton = document.getElementById('disconnect-button')
 
-// Thèmes
-const themeSelect = document.getElementById('theme-select')
+
 
 // ========================================
 // VARIABLES
@@ -72,27 +83,39 @@ let botStatus = 'disconnected'
 let following = false
 let followedPlayer = null
 let isDisconnecting = false
+let isMounted = false
+let vehicleRequestPending = false
 
 // ========================================
 // GESTION DES THÈMES
 // ========================================
 
+
 const savedTheme = localStorage.getItem('app-theme')
 
-// Minecraft est le thème par défaut.
 const initialTheme = savedTheme === 'normal'
   ? 'normal'
   : 'minecraft'
 
-themeSelect.value = initialTheme
-document.body.dataset.theme = initialTheme
-
-themeSelect.addEventListener('change', () => {
-  const theme = themeSelect.value
+// Appliquer le thème et conserver le choix.
+function applyTheme(theme) {
+  if (theme !== 'normal' && theme !== 'minecraft') return
 
   document.body.dataset.theme = theme
   localStorage.setItem('app-theme', theme)
+
+  // Synchroniser la coche du menu Windows.
+  window.minecraftBot.syncTheme(theme)
+}
+
+// Thème au démarrage.
+applyTheme(initialTheme)
+
+// Réagir aux changements depuis Affichage > Thème.
+window.minecraftBot.onThemeChanged(theme => {
+  applyTheme(theme)
 })
+
 
 // ========================================
 // CHANGEMENT D'ÉCRAN
@@ -511,14 +534,25 @@ function updateStatus(status) {
   commandForm.querySelector('button').disabled = !connected
   chatForm.querySelector('button').disabled = !connected
 
-  if (!connected) {
-    following = false
-    followedPlayer = null
+  
+	if (!connected) {
+	  following = false
+	  followedPlayer = null
 
-    playerSelect.replaceChildren(
-      new Option('Aucun joueur visible', '')
-    )
-  }
+	  playerSelect.replaceChildren(
+		new Option('Aucun joueur visible', '')
+	  )
+
+	  authorizedPlayerSelect.replaceChildren(
+		new Option('Aucun joueur autorisé', '')
+	  )
+
+	  updateAuthorizedPlayer(null)
+	}
+
+	authorizedPlayerSelect.disabled =
+	  !connected || updatingAuthorization
+
 
   if (status === 'disconnected' || status === 'error') {
     posX.textContent = '-'
@@ -531,6 +565,12 @@ function updateStatus(status) {
   }
 
   updateFollowButton()
+
+  if (!connected) {
+    isMounted = false
+    vehicleRequestPending = false
+  }
+  updateVehicleButton()
 }
 
 window.minecraftBot.onStatus(status => {
@@ -550,6 +590,7 @@ window.minecraftBot.onPosition(position => {
 // ========================================
 // LISTE DES JOUEURS VISIBLES
 // ========================================
+
 
 window.minecraftBot.onPlayers(players => {
   const previousSelection = playerSelect.value
@@ -575,6 +616,30 @@ window.minecraftBot.onPlayers(players => {
   updateFollowButton()
 })
 
+
+// ========================================
+// JOUEURS CONNECTÉS POUR LES /MSG
+// ========================================
+
+window.minecraftBot.onConnectedPlayers(players => {
+  authorizedPlayerSelect.replaceChildren()
+
+  authorizedPlayerSelect.add(
+    new Option('Aucun joueur autorisé', '')
+  )
+
+  for (const player of players) {
+    authorizedPlayerSelect.add(
+      new Option(player, player)
+    )
+  }
+
+  // Conserver la sélection actuelle si possible.
+  updateAuthorizedPlayer(authorizedPlayer)
+})
+
+
+
 playerSelect.addEventListener('change', () => {
   updateFollowButton()
 })
@@ -593,6 +658,9 @@ function updateFollowButton() {
   followButton.disabled =
     botStatus !== 'connected' ||
     (!following && !playerSelect.value)
+
+  // Le contrôle manuel des véhicules est indisponible pendant le suivi.
+  updateVehicleButton()
 }
 
 followButton.addEventListener('click', async () => {
@@ -609,6 +677,109 @@ followButton.addEventListener('click', async () => {
 
   await sendCommand(`suivre ${player}`)
 })
+
+
+// ========================================
+// GESTION DU VÉHICULE
+// ========================================
+
+function updateVehicleButton() {
+  if (!vehicleButton) return
+
+  vehicleButton.textContent = isMounted
+    ? 'Quitter le véhicule'
+    : 'Monter dans un véhicule'
+
+  vehicleButton.classList.toggle('vehicle-active', isMounted)
+  vehicleButton.disabled = botStatus !== 'connected' || vehicleRequestPending || following
+  vehicleButton.title = following
+    ? 'Arrête le suivi pour utiliser manuellement un véhicule.'
+    : ''
+
+}
+
+// L'événement reflète l'état réel du bot, pas seulement le clic.
+window.minecraftBot.onVehicle(mounted => {
+  isMounted = Boolean(mounted)
+  updateVehicleButton()
+})
+
+if (vehicleButton) {
+  vehicleButton.addEventListener('click', async () => {
+    if (botStatus !== 'connected' || vehicleRequestPending || following) return
+
+    vehicleRequestPending = true
+    updateVehicleButton()
+
+    try {
+      const result = await window.minecraftBot.toggleVehicle()
+
+      if (result && result.success === false) {
+        addLog(`ERREUR : ${result.error || 'Action impossible.'}`)
+      }
+    } catch (error) {
+      addLog(`ERREUR : ${error.message}`)
+    } finally {
+      vehicleRequestPending = false
+      updateVehicleButton()
+    }
+  })
+}
+
+// ========================================
+// JOUEUR AUTORISÉ POUR LES /MSG
+// ========================================
+
+function updateAuthorizedPlayer(username) {
+  authorizedPlayer = username || null
+
+  authorizedPlayerStatus.textContent =
+    authorizedPlayer || 'Aucune'
+
+  authorizedPlayerStatus.style.color =
+    authorizedPlayer ? '#68d391' : ''
+
+  // Synchroniser la liste avec le joueur autorisé.
+  const available = Array.from(authorizedPlayerSelect.options)
+    .some(option => option.value === authorizedPlayer)
+
+  authorizedPlayerSelect.value =
+    authorizedPlayer && available ? authorizedPlayer : ''
+}
+
+// Quand le bot confirme une modification.
+window.minecraftBot.onAuthorizedPlayer(username => {
+  updateAuthorizedPlayer(username)
+})
+
+// Changement immédiat depuis la liste déroulante.
+authorizedPlayerSelect.addEventListener('change', async () => {
+  if (botStatus !== 'connected' || updatingAuthorization) return
+
+  const username = authorizedPlayerSelect.value || null
+
+  updatingAuthorization = true
+  authorizedPlayerSelect.disabled = true
+
+  try {
+    const result = await window.minecraftBot.setAuthorizedPlayer(username)
+
+    if (!result.success) {
+      addLog(`ERREUR : ${result.error}`)
+      updateAuthorizedPlayer(authorizedPlayer)
+      return
+    }
+
+    updateAuthorizedPlayer(result.authorizedPlayer)
+  } catch (error) {
+    addLog(`ERREUR : ${error.message}`)
+    updateAuthorizedPlayer(authorizedPlayer)
+  } finally {
+    updatingAuthorization = false
+    authorizedPlayerSelect.disabled = botStatus !== 'connected'
+  }
+})
+
 
 // ========================================
 // CONSOLE CMD
@@ -752,6 +923,8 @@ disconnectButton.addEventListener('click', async () => {
 function resetControls() {
   following = false
   followedPlayer = null
+  isMounted = false
+  vehicleRequestPending = false
 
   posX.textContent = '-'
   posY.textContent = '-'
@@ -762,6 +935,7 @@ function resetControls() {
   )
 
   updateFollowButton()
+  updateVehicleButton()
 }
 
 // ========================================

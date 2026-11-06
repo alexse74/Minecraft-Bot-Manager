@@ -1,5 +1,5 @@
 
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { randomUUID } = require('crypto')
@@ -9,6 +9,74 @@ let mainWindow = null
 let isQuitting = false
 
 const botManager = new BotManager()
+
+
+// ========================================
+// MENU AFFICHAGE / THÈME
+// ========================================
+
+let selectedTheme = 'minecraft'
+
+function setApplicationTheme(theme, notifyRenderer = false) {
+  if (theme !== 'minecraft' && theme !== 'normal') {
+    return
+  }
+
+  selectedTheme = theme
+
+  // Met à jour la coche dans le menu.
+  createApplicationMenu()
+
+  // Envoie le changement à l'interface.
+  if (notifyRenderer) {
+    sendToInterface('app:theme-changed', theme)
+  }
+}
+
+function createApplicationMenu() {
+  const template = [
+    {
+      label: 'Affichage',
+      submenu: [
+        {
+          label: 'Thème',
+          submenu: [
+            {
+              label: 'Défaut',
+              type: 'radio',
+              checked: selectedTheme === 'minecraft',
+              click: () => {
+                setApplicationTheme('minecraft', true)
+              }
+            },
+            {
+              label: 'Classique',
+              type: 'radio',
+              checked: selectedTheme === 'normal',
+              click: () => {
+                setApplicationTheme('normal', true)
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
+// Synchronise le menu avec le thème sauvegardé
+// dans l'interface au démarrage.
+ipcMain.on('app:theme-sync', (event, theme) => {
+  if (event.sender !== mainWindow?.webContents) {
+    return
+  }
+
+  setApplicationTheme(theme)
+})
+
 
 // ========================================
 // COMMUNICATION AVEC L'INTERFACE
@@ -34,6 +102,17 @@ botManager.on('position', position => {
 
 botManager.on('players', players => {
   sendToInterface('bot:players', players)
+})
+botManager.on('authorizedPlayer', username => {
+  sendToInterface('bot:authorized-player', username)
+})
+botManager.on('connectedPlayers', players => {
+  sendToInterface('bot:connected-players', players)
+})
+
+// Informe l'interface quand le bot monte ou descend
+botManager.on('vehicle', mounted => {
+  sendToInterface('bot:vehicle', mounted)
 })
 
 // ========================================
@@ -265,6 +344,28 @@ ipcMain.handle('bot:command', async (_event, input) => {
   }
 })
 
+
+// ========================================
+// JOUEUR AUTORISÉ POUR LES /MSG
+// ========================================
+
+ipcMain.handle('bot:set-authorized-player', (_event, username) => {
+  try {
+    botManager.setAuthorizedPlayer(username)
+
+    return {
+      success: true,
+      authorizedPlayer: botManager.authorizedPlayer
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+})
+
+
 ipcMain.handle('bot:disconnect', async () => {
   try {
     await botManager.disconnect()
@@ -278,6 +379,11 @@ ipcMain.handle('bot:disconnect', async () => {
   }
 })
 
+// Monter dans le véhicule le plus proche ou en descendre
+ipcMain.handle('bot:toggle-vehicle', async () => {
+  return await botManager.toggleVehicle()
+})
+
 ipcMain.handle('config:get-username', () => {
   return loadLastUsername()
 })
@@ -286,15 +392,22 @@ ipcMain.handle('config:get-username', () => {
 // FENÊTRE ELECTRON
 // ========================================
 
+
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 750,
-    minWidth: 900,
-    minHeight: 650,
-    resizable: false,
+    width: 1350,
+	height: 900,
+	minWidth: 1100,
+	minHeight: 750,
+	resizable: true,
+
     title: 'Minecraft Bot Manager',
+
+    // Logo personnalisé
+    icon: path.join(__dirname, 'assets', 'icon.ico'),
+
     backgroundColor: '#17191d',
+
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -309,12 +422,16 @@ function createWindow() {
   })
 }
 
+
 // ========================================
 // DÉMARRAGE ET FERMETURE
 // ========================================
 
+
 app.whenReady().then(() => {
+  createApplicationMenu()
   createWindow()
+
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
